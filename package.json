@@ -1,0 +1,31 @@
+{
+    "name": "drawthewordguess",
+    "version": "1.0.0",
+    "main": "assets/index.js",
+    "scripts": {
+        "start": "nodemon --inspect assets/index.js",
+        "watch": "sass --watch assets/resources/scss/:assets/public/css/",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/TUANKIET0397/DrawTheWordGuess.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/TUANKIET0397/DrawTheWordGuess/issues"
+    },
+    "homepage": "https://github.com/TUANKIET0397/DrawTheWordGuess#readme",
+    "description": "",
+    "dependencies": {
+        "express": "^5.1.0",
+        "express-handlebars": "^8.0.3"
+    },
+    "devDependencies": {
+        "morgan": "^1.10.1",
+        "nodemon": "^3.1.10",
+        "sass": "^1.91.0"
+    }
+}
