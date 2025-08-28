@@ -1,0 +1,214 @@
+{{#contentFor "styles"}}
+    <link rel="stylesheet" href="/css/player.css" />
+{{/contentFor}}
+
+<div class="container">
+    <div class="player_sidebar">
+        <div class="player-drawing">
+            {{#if playerName}}
+                <h3>Welcome, {{playerName}}!</h3>
+            {{/if}}
+            <div class="player_playing">
+                Game Area
+            </div>
+        </div>
+        <div class="player_navigate">
+            <button id="out-game" class="player_buttons">Out game</button>
+            <button class="player_buttons share">Share</button>
+            <div class="qr-code">
+                <img src="" alt="qr-code" />
+            </div>
+        </div>
+    </div>
+
+    <section class="drawing-board" style="background: none !important;">
+        <!-- khung chứa canvas vẽ -->
+        <div class="word-display" id="word-display" style="display: none;">
+                <h3>Keyword: <span id="current-word"></span></h3>
+                <button class="hint-button" id="hint-button">Suggest (<span id="hint-count">3</span>)</button>
+        </div>
+
+        <div
+            id="drawing-board__choice"
+            class="drawing-board__choice"
+            style="display: none;"
+        >
+            <div class="drawing-board__wrapper" id="drawing-board__first">
+                <img
+                    src="/img/background/logo.png"
+                    alt="fun gif"
+                    class="drawing-board__gif"
+                />
+                <h2 class="drawing-board__title">Draw Or Guess</h2>
+                <h3 class="drawing-board__username" id="drawer-name-first"></h3>
+                
+                <div class="drawing-board__options">
+                    <button
+                    style="font-size: 40px;"
+                        class="drawing-board__button"
+                        onclick="handleChoice('draw')"
+                    >Draw</button>
+                    <button
+                    style="font-size: 40px;"
+                        class="drawing-board__button"
+                        onclick="handleChoice('no-draw')"
+                    >Guess</button>
+                </div>
+                
+                <!-- Thanh thời gian cho bảng chọn đầu tiên -->
+                <div class="choice-timer">
+                    <div class="choice-timer__fill" id="choice-timer-1"></div>
+                </div>
+            </div>
+            <div
+                class="drawing-board__wrapper"
+                id="drawing-board__second"
+                style="display: none;"
+            >
+                <img
+                    src="/img/background/logo.png"
+                    alt="fun gif"
+                    class="drawing-board__gif"
+                />
+                <h2 class="drawing-board__title">Choose a keyword!</h2>
+                <h3
+                    class="drawing-board__username"
+                    id="drawer-name-second"
+                ></h3>
+                
+                <div class="drawing-board__options">
+                    <!-- Các button chọn từ sẽ được thêm động bằng JavaScript -->
+                </div>
+                
+                <!-- Thanh thời gian cho bảng chọn từ -->
+                <div class="choice-timer">
+                    <div class="choice-timer__fill" id="choice-timer-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            id="drawing-board__canvas"
+            class="drawing-board__canvas"
+            style="display: none;"
+        >
+            
+
+            <!-- Gợi ý hiển thị cho TẤT CẢ người chơi (kể cả người đoán) -->
+            <div id="hint-display" class="hint-display" style="display:none;">
+                <span id="hint-text"></span>
+                <span class="hint-remaining">(<span id="remaining-hints">3</span> suggestions left)</span>
+            </div>
+            
+            <canvas id="drawing-canvas"></canvas>
+            <div class="drawing-board__progress">
+                <div
+                    class="drawing-board__progress-fill"
+                    id="drawing-board__canvas-fill"
+                ></div>
+            </div>
+        </div>
+
+        <!-- canvas -->
+
+        <!-- ranking-board -->
+        <div class="ranking-board" style="display: none;">
+            <h2 class="ranking-board__title">GAME OVER</h2>
+            <div class="ranking-board__list">
+                <!-- Second Place -->
+                <div class="ranking-board__item ranking-board__item--second">
+                    <div class="ranking-board__avatar">
+                        <img src="/img/ranking/rank2.png" alt="" />
+                    </div>
+                    <h3 class="ranking-board__name">2nd Place</h3>
+                    <h4 class="ranking-board__score">0</h4>
+                </div>
+
+                <!-- First Place -->
+                <div class="ranking-board__item ranking-board__item--first">
+                    <div class="ranking-board__avatar">
+                        <img src="/img/ranking/rank1.png" alt="" />
+                    </div>
+                    <h3 class="ranking-board__name">1st Place</h3>
+                    <h4 class="ranking-board__score">0</h4>
+                </div>
+
+                <!-- Third Place -->
+                <div class="ranking-board__item ranking-board__item--third">
+                    <div class="ranking-board__avatar">
+                        <img src="/img/ranking/rank3.png" alt="" />
+                    </div>
+                    <h3 class="ranking-board__name">3rd Place</h3>
+                    <h4 class="ranking-board__score">0</h4>
+                </div>
+            </div>
+            <div class="ranking-board__progress">
+                <div class="ranking-board__progress-fill"></div>
+            </div>
+            <p class="ranking-board__reset-text">Game mới sẽ bắt đầu sau 11 giây...</p>
+        </div>
+        <!-- ranking-board -->
+    </section>
+    <div class="tools">
+        <section class="tools-board">
+            <div class="row">
+                <label class="title"><strong>Options</strong></label>
+                <ul class="options">
+                    <li class="option active tool" id="brush">
+                        <img src="./assets/icons/brush.svg" alt="" />
+                        <span>Brush</span>
+                    </li>
+                    <li class="option tool" id="eraser">
+                        <img src="./assets/icons/eraser.svg" alt="" />
+                        <span>Eraser</span>
+                    </li>
+                    <li class="option">
+                        <input
+                            type="range"
+                            id="size-slider"
+                            min="1"
+                            max="30"
+                            value="5"
+                        />
+                    </li>
+                </ul>
+            </div>
+            <div class="row colors">
+                <label class="title"><b>Colors</b></label>
+                <ul class="options">
+                    <li class="option"></li>
+                    <li class="option selected"></li>
+                    <li class="option"></li>
+                    <li class="option"></li>
+                    <li class="option">
+                        <input type="color" id="color-picker" value="#4A98F7" />
+                    </li>
+                </ul>
+            </div>
+            <div class="row buttons">
+                <button class="clear-canvas">clear Image</button>
+                <button class="save-img" style="display: none;">Save As Image</button>
+            </div>
+        </section>
+        <!-- form chat -->
+        <div class="chat-require">
+            <div class="chat_content">
+                <div class="chat_body">
+
+                </div>
+                <input
+                    type="text"
+                    class="chat_input"
+                    placeholder="Type your answers here..."
+                />
+            </div>
+        </div>
+    </div>
+</div>
+
+{{#contentFor "scripts"}}
+    <script>
+        window.ngrokUrl = "{{ngrokUrl}}";
+    </script>
+    <script src="/js/player.js"></script>
+{{/contentFor}}
