@@ -42,15 +42,15 @@ let canGuess = false;
 let timer;
 
 // Biến cho hệ thống gợi ý
-let hintCount = 3
-let currentWord = ""
-let hintButton = document.getElementById("hint-button")
-let wordDisplay = document.getElementById("word-display")
-let currentWordSpan = document.getElementById("current-word")
-let hintCountSpan = document.getElementById("hint-count")
-let hintDisplay = document.getElementById("hint-display")
-let hintText = document.getElementById("hint-text")
-let remainingHintsSpan = document.getElementById("remaining-hints")
+let hintCount = 3;
+let currentWord = '';
+let hintButton = document.getElementById('hint-button');
+let wordDisplay = document.getElementById('word-display');
+let currentWordSpan = document.getElementById('current-word');
+let hintCountSpan = document.getElementById('hint-count');
+let hintDisplay = document.getElementById('hint-display');
+let hintText = document.getElementById('hint-text');
+let remainingHintsSpan = document.getElementById('remaining-hints');
 
 // Biến cho thanh thời gian chọn
 let choiceTimer1 = null;
@@ -187,7 +187,7 @@ const chatInput = document.querySelector('.chat_input');
 const chatBody = document.querySelector('.chat_body');
 
 chatInput.addEventListener('keypress', (e) => {
-if (e.key === 'Enter' && chatInput.value.trim() !== '') {
+  if (e.key === 'Enter' && chatInput.value.trim() !== '') {
     if (!canGuess) return;
     socket.emit('guess', chatInput.value.trim());
     chatInput.value = '';
@@ -201,3 +201,154 @@ socket.on('guess', (data) => {
   chatBody.appendChild(div);
   chatBody.scrollTop = chatBody.scrollHeight; // Tự cuộn xuống dòng mới
 });
+
+// ========== HÀM CẬP NHẬT TÊN NGƯỜI VẼ ==========
+function updateCurrentDrawerName(drawerName) {
+  const usernameElements = document.querySelectorAll(
+    '.drawing-board__username'
+  );
+  usernameElements.forEach((element) => {
+    element.textContent = drawerName || 'Đang chờ...';
+  });
+  console.log('Updated drawer name to:', drawerName);
+}
+
+let currentDrawerName = 'Đang chờ...';
+
+//Socket IO
+
+socket.on('clear', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  setCanvasBackground();
+});
+
+socket.on('drawing', (data) => {
+  if (
+    typeof data.prevX !== 'number' ||
+    typeof data.prevY !== 'number' ||
+    typeof data.x !== 'number' ||
+    typeof data.y !== 'number'
+  )
+    return;
+
+  ctx.beginPath();
+  ctx.strokeStyle = data.color;
+  ctx.lineWidth = data.width;
+  ctx.moveTo(data.prevX, data.prevY); // từ điểm trước
+  ctx.lineTo(data.x, data.y); // đến điểm mới
+  ctx.stroke();
+});
+
+socket.on('init', (data) => {
+  // Đảm bảo canvas đã resize trước khi vẽ
+  const container = document.getElementById('drawing-board__canvas');
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  setCanvasBackground();
+
+  data.drawHistory.forEach((line) => {
+    if (
+      typeof line.prevX !== 'number' ||
+      typeof line.prevY !== 'number' ||
+      typeof line.x !== 'number' ||
+      typeof line.y !== 'number'
+    )
+      return;
+
+    ctx.beginPath();
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = line.width;
+    ctx.moveTo(line.prevX, line.prevY);
+    ctx.lineTo(line.x, line.y);
+    ctx.stroke();
+  });
+
+  // Gửi đoán
+  data.guessHistory.forEach((g) => {
+    const div = document.createElement('div');
+    div.classList.add('guess');
+    div.textContent = `👤 ${g.username}: ${g.guess}`;
+    chatBody.appendChild(div);
+  });
+
+  chatBody.scrollTop = chatBody.scrollHeight;
+});
+
+socket.on('startGame', () => {
+  canPlay = true;
+  document.getElementById('drawing-board__first').style.display = 'flex'; //Mặc định
+  document.querySelector('.drawing-board__progress').style.display = 'block'; //Mặc định
+});
+
+// Khi chưa đủ người
+socket.on('waiting', (playerCount) => {
+  showCanvasWaiting();
+  alert(`Waiting for other players`);
+});
+
+socket.on('yourTurnToDraw', () => {
+  isDrawer = true;
+  canGuess = false;
+  document.getElementById('drawing-board__choice').style.display = 'block';
+
+  stopChoiceTimers(); // <-- Đảm bảo dừng timer trước khi bắt đầu mới
+  startChoiceTimer1();
+});
+
+socket.on('startDrawing', () => {
+  isDrawer = true;
+  document.getElementById('drawing-board__choice').style.display = 'none';
+  document.getElementById('drawing-board__canvas').style.display = 'block';
+  resizeCanvas();
+
+  stopChoiceTimers();
+
+  // Khởi tạo lại hint elements
+  hintButton = document.getElementById('hint-button');
+  wordDisplay = document.getElementById('word-display');
+  currentWordSpan = document.getElementById('current-word');
+  hintCountSpan = document.getElementById('hint-count');
+  hintDisplay = document.getElementById('hint-display');
+  hintText = document.getElementById('hint-text');
+  remainingHintsSpan = document.getElementById('remaining-hints');
+
+  // Thêm event listener cho hint button
+  addHintButtonListener();
+
+  // Nếu client đã biết currentWord, hiển thị ngay cho người vẽ
+  if (currentWord && currentWordSpan) currentWordSpan.textContent = currentWord;
+  if (currentWord && wordDisplay) wordDisplay.style.display = 'block';
+});
+
+socket.on('otherPlayerDrawing', () => {
+  isDrawer = false;
+  canGuess = true;
+  document.getElementById('drawing-board__choice').style.display = 'none';
+  document.getElementById('drawing-board__canvas').style.display = 'block';
+  resizeCanvas();
+
+  // Dừng tất cả timer chọn
+  stopChoiceTimers();
+});
+
+socket.on('startRound', (data) => {
+  document.querySelector('.drawing-board__progress').style.display = 'block';
+  const duration = data?.duration || 45; // Lấy thời gian từ server, mặc định 45s
+  const startTime = data?.startTime || Date.now(); // Timestamp từ server
+
+  // Tính thời gian còn lại dựa trên timestamp từ server
+  const elapsed = (Date.now() - startTime) / 1000;
+  const remainingTime = Math.max(0, duration - elapsed);
+
+  // Sử dụng thời gian còn lại để tạo progress bar mượt mà
+  setProgressBar(remainingTime, 'drawing-board__canvas-fill', () => {
+    setTimeout(() => {
+      socket.emit('timeUp');
+    }, 3000);
+  });
+
+  // Lưu thông tin để sync timer
+  window.currentRoundData = { duration, startTime };
+});
+
+//Role
