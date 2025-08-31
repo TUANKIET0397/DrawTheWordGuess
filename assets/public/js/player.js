@@ -847,3 +847,152 @@ wordDisplay = document.getElementById("word-display");
   
   setProgressBar(10, 'drawing-board__progress-fill', () => startDrawing());
 };
+
+
+
+// Ranking Board
+function updateRankingBoard(rankings, durationSec = 8) {
+  const items = document.querySelectorAll('.ranking-board__item');
+
+  rankings.forEach((player, index) => {
+    const item = items[index];
+    if (item) {
+      item.querySelector('.ranking-board__name').textContent = player.name;
+      item.querySelector('.ranking-board__score').textContent = player.score;
+    }
+  });
+
+  // Start progress bar animation
+  const progressFill = document.querySelector('.ranking-board__progress-fill');
+
+  // Reset về trạng thái đầu
+  progressFill.style.transition = 'none';
+  progressFill.style.width = '100%';
+
+  // Force reflow để đảm bảo trình duyệt “nhận” trạng thái trước khi animate
+  void progressFill.offsetWidth;
+
+  // Bắt đầu animate đồng bộ
+  progressFill.style.transition = `width ${durationSec}s linear`;
+  progressFill.style.width = '0';
+}
+
+socket.on('showRankings', (data) => {
+  const rankingBoard = document.querySelector('.ranking-board');
+  const wd = document.getElementById('word-display');
+  const prog = document.querySelector('.drawing-board__progress');
+  if (wd) wd.style.display = 'none';
+  if (prog) prog.style.display = 'none';
+
+  rankingBoard.style.display = 'flex';
+  // Đảm bảo overlay đã render trước khi animate
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      updateRankingBoard(data.players, data.duration || 8);
+    });
+  });
+
+  setTimeout(() => {
+    rankingBoard.style.display = 'none';
+    // không tự bật lại progress ở đây; chờ sự kiện turn mới
+  }, (data.duration || 8) * 1000 + 200);
+});
+
+// Thêm xử lý khi reset game
+socket.on('resetGame', (data) => {
+  isDrawer = false;
+  // Xóa hiển thị từ cũ
+  const oldWordDisplay = document.querySelector('.current-word-display');
+  if (oldWordDisplay) {
+    oldWordDisplay.remove();
+  }
+
+  // Lấy lại tên người chơi từ URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const playerName = urlParams.get('playerName');
+  if (playerName) {
+    document.querySelector('.player-name').textContent = playerName;
+  }
+});
+
+//qr
+// Nhận ngrok URL từ server
+const ngrokUrl = window.ngrokUrl;
+
+// DOM elements
+const shareBtn = document.querySelector('.share');
+const qrCode = document.querySelector('.qr-code');
+const qrImg = qrCode.querySelector('img');
+
+let isVisible = false;
+
+shareBtn.addEventListener('click', () => {
+  if (!isVisible) {
+    // Hiện QR code
+    const gameUrl = `${ngrokUrl}`; // Hoặc đường dẫn bạn muốn
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+      gameUrl
+    )}`;
+    qrCode.classList.add('show');
+    shareBtn.textContent = 'Hide';
+    isVisible = true;
+  } else {
+    // Ẩn QR code
+    qrCode.classList.remove('show');
+    shareBtn.textContent = 'Share';
+    isVisible = false;
+  }
+});
+
+
+
+function updateHintButton() {
+console.log('Updating hint button, isDrawer:', isDrawer, 'hintCount:', hintCount);
+  if (hintCountSpan) hintCountSpan.textContent = hintCount
+  if (hintButton) {
+    hintButton.disabled = !isDrawer || hintCount <= 0
+    if (hintCount <= 0) hintButton.textContent = 'Hết gợi ý'
+    console.log('Hint button disabled:', hintButton.disabled);
+  }
+}
+
+// Function để thêm event listener cho hint button
+function addHintButtonListener() {
+  if (hintButton && !hintButton.hasAttribute('data-listener-added')) {
+    hintButton.addEventListener('click', () => {
+      console.log('Hint button clicked, isDrawer:', isDrawer, 'hintCount:', hintCount, 'currentWord:', currentWord);
+      if (!isDrawer) return; // chỉ người vẽ được bấm
+      if (hintCount > 0 && currentWord) {
+        const hintLevel = 4 - hintCount; // 1..3
+        console.log('Sending hint request, level:', hintLevel);
+        socket.emit('requestHint', {
+          word: currentWord,
+          hintLevel
+        })
+      }
+    });
+    hintButton.setAttribute('data-listener-added', 'true');
+    console.log('Hint button listener added');
+  }
+}
+
+// Thêm event listener khi DOM load
+document.addEventListener('DOMContentLoaded', () => {
+  addHintButtonListener();
+});
+
+// Nhận gợi ý từ server và hiển thị cho tất cả
+socket.on('showHint', (data) => {
+  console.log('Received hint from server:', data);
+  // Cập nhật đếm theo server
+  hintCount = Math.max(0, Number(data?.remainingHints) || hintCount)
+  updateHintButton()
+  if (hintText) hintText.textContent = data?.hint || ''
+  if (remainingHintsSpan) remainingHintsSpan.textContent = String(hintCount)
+  if (hintDisplay) {
+    hintDisplay.style.display = 'block'
+    setTimeout(() => {
+      hintDisplay.style.display = 'none'
+    }, 5000)
+  }
+})
