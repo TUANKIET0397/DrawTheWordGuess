@@ -352,3 +352,297 @@ socket.on('startRound', (data) => {
 });
 
 //Role
+socket.on('role', (role) => {
+  console.log('Received role:', role);
+
+  // Khởi tạo lại hint elements
+  hintButton = document.getElementById('hint-button');
+  wordDisplay = document.getElementById('word-display');
+  currentWordSpan = document.getElementById('current-word');
+  hintCountSpan = document.getElementById('hint-count');
+  hintDisplay = document.getElementById('hint-display');
+  hintText = document.getElementById('hint-text');
+  remainingHintsSpan = document.getElementById('remaining-hints');
+
+  if (role === 'drawer') {
+    isDrawer = true;
+    canGuess = false;
+    // Reset lượt gợi ý khi trở thành người vẽ mới
+    hintCount = 3;
+    updateHintButton();
+    if (hintDisplay) hintDisplay.style.display = 'none';
+
+    // Hiện first, ẩn second và canvas
+    document.getElementById('drawing-board__choice').style.display = 'block';
+    document.getElementById('drawing-board__first').style.display = 'flex';
+    document.getElementById('drawing-board__second').style.display = 'none';
+    document.getElementById('drawing-board__canvas').style.display = 'none';
+  } else {
+    isDrawer = false;
+    canGuess = true;
+    // Khi là người đoán, đảm bảo nút gợi ý bị vô hiệu hóa và ẩn khung gợi ý cũ
+    updateHintButton();
+    if (hintDisplay) hintDisplay.style.display = 'none';
+    if (wordDisplay) wordDisplay.style.display = 'none';
+    if (currentWordSpan) currentWordSpan.textContent = '';
+
+    // Ẩn tất cả UI chọn vẽ, chỉ để canvas đoán
+    document.getElementById('drawing-board__choice').style.display = 'none';
+    document.getElementById('drawing-board__canvas').style.display = 'block';
+
+    // KHÔNG cập nhật tên ở đây nữa vì không phải là drawer
+  }
+});
+
+// ========== LẮNG NGHE CẬP NHẬT THÔNG TIN NGƯỜI VẼ ==========
+// Lắng nghe sự kiện cập nhật thông tin người vẽ hiện tại
+socket.on('updateCurrentDrawer', (drawerInfo) => {
+  console.log('Updating current drawer to:', drawerInfo.name);
+  currentDrawerName = drawerInfo.name;
+  updateCurrentDrawerName(drawerInfo.name);
+});
+
+// Cập nhật khi game bắt đầu turn mới
+socket.on('newTurnStarted', (gameState) => {
+  console.log('New turn started, drawer:', gameState.currentDrawer);
+  if (gameState.currentDrawer) {
+    currentDrawerName = gameState.currentDrawer.name;
+    updateCurrentDrawerName(gameState.currentDrawer.name);
+  }
+});
+
+socket.on('clearCanvas', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  setCanvasBackground();
+  chatBody.innerHTML = ''; // Xoá đoạn chat cũ
+
+  // Dừng tất cả timer chọn
+  stopChoiceTimers();
+});
+
+//Choose Word
+
+function chooseWord(word) {
+  // Dừng timer2 ngay khi chọn từ
+  stopChoiceTimers();
+
+  currentWord = word;
+  if (currentWordSpan) currentWordSpan.textContent = word;
+  if (wordDisplay) wordDisplay.style.display = 'block';
+
+  socket.emit('selectedWord', word);
+  document.getElementById('drawing-board__choice').style.display = 'none';
+  document.getElementById('drawing-board__canvas').style.display = 'block';
+
+  resizeCanvas();
+  setProgressBar(45, 'drawing-board__canvas-fill', () => {
+    setTimeout(() => {
+      socket.emit('timeUp');
+    }, 3000);
+  });
+}
+
+socket.on('chooseWordOptions', (words) => {
+  document.getElementById('drawing-board__choice').style.display = 'block';
+  document.getElementById('drawing-board__canvas').style.display = 'none';
+
+  const secondUI = document.getElementById('drawing-board__second');
+  secondUI.style.display = 'flex';
+
+  // Tìm phần .drawing-board__options
+  const optionsContainer = secondUI.querySelector('.drawing-board__options');
+  optionsContainer.innerHTML = ''; // Xoá các nút cũ nếu có
+
+  // Thêm các nút mới vào .drawing-board__options
+  words.forEach((word) => {
+    const btn = document.createElement('button');
+    btn.textContent = word;
+    btn.classList.add('drawing-board__button');
+    btn.onclick = () => chooseWord(word);
+    optionsContainer.appendChild(btn);
+  });
+
+  // Bắt đầu timer cho bảng chọn từ
+  startChoiceTimer2();
+});
+
+// (removed duplicate/incorrect selectedWord handler)
+
+//Drawboard.js
+
+function handleChoice(choice) {
+  if (choice === 'draw') {
+    // Ẩn first, hiển thị second
+    document.getElementById('drawing-board__first').style.display = 'none';
+    document.getElementById('drawing-board__second').style.display = 'flex';
+
+    // Dừng timer1 trước khi request từ mới
+    stopChoiceTimers();
+    socket.emit('requestWordOptions');
+  } else {
+    socket.emit('skipDrawing');
+    document.getElementById('drawing-board__choice').style.display = 'none';
+    stopChoiceTimers();
+  }
+}
+
+function setProgressBar(duration, barId, callback) {
+  const fill = document.getElementById(barId);
+  if (!fill) return;
+
+  // Clear timer cũ nếu có
+  if (window.currentProgressTimer) {
+    clearTimeout(window.currentProgressTimer);
+  }
+
+  // Reset style
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  fill.style.background = '#4a98f7'; // Bắt đầu với màu xanh
+
+  // Force reflow để đảm bảo trình duyệt nhận style mới
+  void fill.offsetWidth;
+
+  // Bắt đầu animation với transition mượt mà
+  setTimeout(() => {
+    fill.style.transition = `width ${duration}s cubic-bezier(0.4, 0.0, 0.2, 1)`;
+    fill.style.width = '0%';
+
+    // Tạo hiệu ứng chuyển màu dần dần từ xanh sang đỏ
+    const startTime = Date.now();
+    const colorInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const progress = elapsed / duration;
+
+      if (progress >= 1) {
+        clearInterval(colorInterval);
+        fill.style.background = '#ff0000'; // Màu đỏ khi hết thời gian
+      } else {
+        // Chuyển dần từ xanh (#4a98f7) sang đỏ (#ff0000)
+        const red = Math.round(74 + (255 - 74) * progress);
+        const green = Math.round(152 + (0 - 152) * progress);
+        const blue = Math.round(247 + (0 - 247) * progress);
+        fill.style.background = `rgb(${red}, ${green}, ${blue})`;
+      }
+    }, 200); // Cập nhật màu mỗi 200ms để mượt mà hơn
+  }, 100);
+
+  // Set timer mới
+  window.currentProgressTimer = setTimeout(callback, duration * 1000);
+}
+
+// Hàm setChoiceProgressBar đã được thay thế bằng logic trực tiếp trong startChoiceTimer1 và startChoiceTimer2
+
+// Hàm để bắt đầu thanh thời gian cho bảng chọn đầu tiên
+function startChoiceTimer1() {
+  const timerFill = document.getElementById('choice-timer-1');
+  if (!timerFill) {
+    console.log('Timer 1 element not found');
+    return;
+  }
+
+  // Dừng timer cũ nếu có
+  if (choiceTimer1) {
+    clearTimeout(choiceTimer1);
+    choiceTimer1 = null;
+  }
+
+  // Reset style
+  timerFill.style.transition = 'none';
+  timerFill.style.width = '100%';
+  timerFill.style.background = '#4a98f7';
+
+  // Force reflow
+  void timerFill.offsetWidth;
+
+  // Start animation
+  setTimeout(() => {
+    timerFill.style.transition = `width ${choiceTimerDuration}s linear`;
+    timerFill.style.width = '0%';
+
+    // Tạo hiệu ứng chuyển màu dần dần từ xanh sang đỏ
+    const startTime = Date.now();
+    const colorInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const progress = elapsed / choiceTimerDuration;
+
+      if (progress >= 1) {
+        clearInterval(colorInterval);
+        timerFill.style.background = '#ff0000'; // Màu đỏ khi hết thời gian
+
+        // Chỉ kick khi timer thực sự chạy xong
+        if (choiceTimer1) {
+          alert('⏰ Time is up! You have been kicked for AFK!');
+          socket.disconnect();
+          window.location.href = '/';
+        }
+      } else {
+        // Chuyển dần từ xanh (#4a98f7) sang đỏ (#ff0000)
+        const red = Math.round(74 + (255 - 74) * progress);
+        const green = Math.round(152 + (0 - 152) * progress);
+        const blue = Math.round(247 + (0 - 247) * progress);
+        timerFill.style.background = `rgb(${red}, ${green}, ${blue})`;
+      }
+    }, 100);
+
+    // Set timeout cho việc kick
+    choiceTimer1 = setTimeout(() => {
+      choiceTimer1 = null; // Reset để tránh kick nhiều lần
+    }, choiceTimerDuration * 1000);
+  }, 50);
+}
+
+function startChoiceTimer2() {
+  const timerFill = document.getElementById('choice-timer-2');
+  if (!timerFill) return;
+
+  // Dừng timer cũ nếu có
+  if (choiceTimer2) {
+    clearTimeout(choiceTimer2);
+    choiceTimer2 = null;
+  }
+
+  // Reset style
+  timerFill.style.transition = 'none';
+  timerFill.style.width = '100%';
+  timerFill.style.background = '#4a98f7';
+
+  // Force reflow
+  void timerFill.offsetWidth;
+
+  // Start animation
+  setTimeout(() => {
+    timerFill.style.transition = `width ${choiceTimerDuration}s linear`;
+    timerFill.style.width = '0%';
+
+    // Tạo hiệu ứng chuyển màu dần dần từ xanh sang đỏ
+    const startTime = Date.now();
+    const colorInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const progress = elapsed / choiceTimerDuration;
+
+      if (progress >= 1) {
+        clearInterval(colorInterval);
+        timerFill.style.background = '#ff0000'; // Màu đỏ khi hết thời gian
+
+        // Chỉ kick khi timer thực sự chạy xong và là người vẽ
+        if (choiceTimer2 && isDrawer) {
+          alert('⏰ Time is up! You have been kicked for AFK!');
+          socket.disconnect();
+          window.location.href = '/';
+        }
+      } else {
+        // Chuyển dần từ xanh (#4a98f7) sang đỏ (#ff0000)
+        const red = Math.round(74 + (255 - 74) * progress);
+        const green = Math.round(152 + (0 - 152) * progress);
+        const blue = Math.round(247 + (0 - 247) * progress);
+        timerFill.style.background = `rgb(${red}, ${green}, ${blue})`;
+      }
+    }, 100);
+
+    // Set timeout cho việc kick
+    choiceTimer2 = setTimeout(() => {
+      choiceTimer2 = null; // Reset để tránh kick nhiều lần
+    }, choiceTimerDuration * 1000);
+  }, 50);
+}
