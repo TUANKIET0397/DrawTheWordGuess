@@ -646,3 +646,204 @@ function startChoiceTimer2() {
     }, choiceTimerDuration * 1000);
   }, 50);
 }
+
+// Hàm để dừng tất cả thanh thời gian chọn
+function stopChoiceTimers() {
+    // Clear timeouts
+    if (choiceTimer1) {
+        clearTimeout(choiceTimer1);
+        choiceTimer1 = null;
+    }
+    if (choiceTimer2) {
+        clearTimeout(choiceTimer2);
+        choiceTimer2 = null;
+    }
+    
+    // Reset style cho cả 2 timer
+    const timer1 = document.getElementById('choice-timer-1');
+    const timer2 = document.getElementById('choice-timer-2');
+    
+    if (timer1) {
+        timer1.style.transition = 'none';
+        timer1.style.width = '100%';
+        timer1.style.background = '#4a98f7';
+    }
+    if (timer2) {
+        timer2.style.transition = 'none';
+        timer2.style.width = '100%';
+        timer2.style.background = '#4a98f7';
+    }
+    
+    console.log('Timers stopped and reset');
+}
+
+function startDrawing() {
+  document.getElementById('drawing-board__choice').style.display = 'none';
+  document.getElementById('drawing-board__canvas').style.display = 'flex';
+
+  stopChoiceTimers();
+  // đảm bảo canvas có kích thước hợp lệ trước khi vẽ
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    setProgressBar(45, 'drawing-board__canvas-fill', () => {
+      setTimeout(() => {
+        socket.emit('timeUp');
+      }, 3000);
+    });
+  });
+}
+
+socket.on('syncTimer', (data) => {
+  // Chỉ sync khi cần thiết và không làm gián đoạn animation hiện tại
+  if (window.currentRoundData && data.remainingTime > 0) {
+    const { duration, startTime } = window.currentRoundData;
+    const currentElapsed = (Date.now() - startTime) / 1000;
+    const expectedRemaining = Math.max(0, duration - currentElapsed);
+    
+    // Chỉ sync nếu độ chênh lệch thời gian > 2 giây
+    if (Math.abs(expectedRemaining - data.remainingTime) > 2) {
+      console.log('Syncing timer:', { expected: expectedRemaining, server: data.remainingTime });
+      // Cập nhật thông tin round
+      window.currentRoundData.startTime = data.startTime;
+    }
+  }
+});
+
+socket.on('stopTimer', () => {
+  // Clear timer hiện tại
+  if (window.currentProgressTimer) {
+    clearTimeout(window.currentProgressTimer);
+    window.currentProgressTimer = null;
+  }
+  
+  const fill = document.getElementById('drawing-board__canvas-fill');
+  if (fill) {
+    // Dừng animation mượt mà
+    fill.style.transition = 'width 0.3s ease-out';
+    fill.style.width = '0%';
+    
+    // Reset sau khi dừng
+    setTimeout(() => {
+      fill.style.transition = 'none';
+      fill.style.background = '#4a98f7';
+    }, 300);
+  }
+  
+  // Clear thông tin round
+  window.currentRoundData = null;
+});
+
+//Bảng người chơi
+socket.on('updatePlayers', (players) => {
+  const sidebar = document.querySelector('.player-drawing .player_playing');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = ''; // Xóa danh sách cũ
+
+  // Tìm người đang vẽ
+  const currentDrawer = players.find((p) => p.role === 'drawer');
+
+  // CHỈ cập nhật nếu chưa có tên drawer hoặc tên khác
+  if (
+    currentDrawer &&
+(!currentDrawerName || currentDrawerName === 'Đang chờ...')
+  ) {
+    console.log('Found current drawer in updatePlayers:', currentDrawer.name);
+    currentDrawerName = currentDrawer.name;
+    updateCurrentDrawerName(currentDrawer.name);
+  }
+
+  // Render danh sách players
+  players.forEach((p) => {
+    const playerDiv = document.createElement('div');
+    playerDiv.classList.add('player');
+
+    const drawerIcon = p.role === 'drawer' ? '✏️ ' : '';
+
+    playerDiv.innerHTML = `
+      <div class="player_main">
+        <div class="player_avatar">
+          <img src="/img/avatar/${p.avatar || 'avt1.jpg'}" alt="Avatar" />
+        </div>
+        <div class="player_detail">
+          <div class="player_name">${drawerIcon}${p.name}</div>
+          <div class="player_score">${
+            p.score
+          } <p class="player_score_text">pts</p></div>
+        </div>
+      </div>
+      ${
+        p.isCorrect
+          ? `
+        <div class="greentick">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 10L8 14L16 6" stroke="#28a745" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+      `
+          : ''
+      }
+    `;
+
+    sidebar.appendChild(playerDiv);
+  });
+});
+
+// Register Name Player
+function registerPlayer() {
+  const storedName = localStorage.getItem('playerName');
+  if (!storedName) {
+    window.location.href = '/';
+    return;
+  }
+
+  socket.emit('joinGame', storedName);
+}
+
+// Gửi đăng ký player khi mới kết nối
+socket.on('connect', () => {
+  console.log('Socket connected:', socket.id);
+  currentDrawerName = 'Đang chờ...';
+  updateCurrentDrawerName('Đang chờ...');
+  
+  // Khởi tạo hint elements
+  hintButton = document.getElementById("hint-button");
+  wordDisplay = document.getElementById("word-display");
+  currentWordSpan = document.getElementById("current-word");
+  hintCountSpan = document.getElementById("hint-count");
+  hintDisplay = document.getElementById("hint-display");
+  hintText = document.getElementById("hint-text");
+  remainingHintsSpan = document.getElementById("remaining-hints");
+  
+  registerPlayer();
+});
+// Khi socket tự động reconnect lại sau mất kết nối
+socket.on('reconnect', (attemptNumber) => {
+  console.log('Socket reconnected after', attemptNumber, 'times');
+  currentDrawerName = 'Đang chờ...';
+  updateCurrentDrawerName('Đang chờ...');
+  
+  // Khởi tạo hint elements
+  hintButton = document.getElementById("hint-button");
+  wordDisplay = document.getElementById("word-display");
+  currentWordSpan = document.getElementById("current-word");
+  hintCountSpan = document.getElementById("hint-count");
+  hintDisplay = document.getElementById("hint-display");
+  hintText = document.getElementById("hint-text");
+  remainingHintsSpan = document.getElementById("remaining-hints");
+  
+  registerPlayer();
+});
+
+window.onload = function () {
+  // Khởi tạo hint elements
+  hintButton = document.getElementById("hint-button");
+wordDisplay = document.getElementById("word-display");
+  currentWordSpan = document.getElementById("current-word");
+  hintCountSpan = document.getElementById("hint-count");
+  hintDisplay = document.getElementById("hint-display");
+  hintText = document.getElementById("hint-text");
+  remainingHintsSpan = document.getElementById("remaining-hints");
+  
+  setProgressBar(10, 'drawing-board__progress-fill', () => startDrawing());
+};
