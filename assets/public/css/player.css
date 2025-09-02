@@ -1,5 +1,7 @@
 @charset "UTF-8";
 /* Import Google font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Protest+Riot&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Protest+Riot&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
 * {
   margin: 0;
@@ -13,7 +15,19 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #0f0;
+  background: #6AD1E0;
+  background-image: url("../img/background/background_player.jpg");
+  background-size: cover;
+  background-repeat: no-repeat; 
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  backdrop-filter: blur(2.5px); /* mức độ blur */
+  background-color: rgba(255, 255, 255, 0.1); /* mờ thêm bằng overlay màu */
+  z-index: -1;
 }
 
 /* common */
@@ -34,6 +48,7 @@ body {
 .player_sidebar {
   height: 505px;
   width: 210px;
+  padding: 4px;
   border-radius: 7px;
   background: #fff;
   display: flex;
@@ -61,7 +76,7 @@ section {
 }
 
 .player_buttons {
-  padding: 10px 20px;
+  padding: 8px 15px;
   margin: 5px;
   background: #007bff;
   color: white;
@@ -71,7 +86,8 @@ section {
 }
 
 .player_buttons:hover {
-  background: #0056b3;
+  background: #4ea3ff;
+  color: #000000;
 }
 
 .qr-code.show,
@@ -227,14 +243,15 @@ section {
 }
 
 .buttons .clear-canvas {
-  color: #6c757d;
-  border: 1px solid #6c757d;
+  color: #ffffff;
+  border: 1px solid #030303;
+  background-color: #404040;
   transition: all 0.3s ease;
 }
 
 .clear-canvas:hover {
-  color: #fff;
-  background: #6c757d;
+  color: #000000;
+  background: #00d6cb;
 }
 
 .buttons .save-img {
@@ -280,17 +297,24 @@ section {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #e02020;
-  border-radius: 50%;
   margin-right: 10px;
   flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid #ddd;
+}
+
+.player_avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .player_name {
   font-weight: 700;
-  color: #555;
-  font-size: 0.9rem;
-  margin-bottom: 4px;
+  color: #2a2a2a;
+  font-size: 1.2rem;
+  margin-bottom: 2.5px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -298,11 +322,11 @@ section {
 }
 
 .player_score {
-  color: #4a98f7;
+  color: #0099b1;
   display: flex;
   align-items: center;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .player_score_text {
@@ -322,26 +346,10 @@ section {
   padding: 10px;
 }
 
-.player_buttons {
-  color: #fff;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.player_buttons.out:hover {
-  background-color: #ce3131;
-}
-
-.out {
-  background-color: #dc3545;
-  border: 1px solid #dc3545;
-}
 
 .player_buttons.share:hover {
-  background-color: #1579f3;
+  background-color: #f3a915;
+  color: #000;
 }
 
 .player_buttons.share:active {
@@ -349,8 +357,9 @@ section {
 }
 
 .share {
-  background-color: #4a98f7;
-  border: 1px solid #4a98f7;
+  color: #ffffff;
+  background-color: #d90000;
+  border: 1px solid #ff5100;
 }
 
 /* Chat */
@@ -403,7 +412,8 @@ section {
   margin-bottom: 10px;
   border-radius: 10px;
   height: 100%;
-  background: rgb(243, 175, 80);
+  background: rgb(255, 255, 255);
+  border: 4px solid #5a5a5a;
 }
 
 .drawing-board__choice {
@@ -423,29 +433,33 @@ section {
   background: white;
   padding: 20px;
   flex-direction: column;
+  position: relative;
 }
 
 .drawing-board__gif {
-  width: 250px;
-  max-height: 350px;
+  width: 350px;
+  max-height: 235px;
   object-fit: contain;
-  margin: 15px 0;
+  margin: 0 0 30px 0;
 }
 
 .drawing-board__title {
-  font-size: 28px;
+  font-size: 65px;
   font-weight: bold;
   margin-bottom: 10px;
+  margin-bottom: 13px;
   text-align: center;
-  font-family: quicksand, sans-serif;
+  font-family: Protest Riot;
+  color: #244E84;
 }
 
 .drawing-board__username {
-  font-size: 30px;
+  font-size: 45px;
   font-weight: bold;
-  font-family: "Times New Roman", Times, serif;
-  margin-bottom: 10px;
+  font-family: Protest Riot;
+  margin-bottom: 15px;
   text-align: center;
+  color: #fc7e00;
 }
 
 .drawing-board__options {
@@ -457,16 +471,47 @@ section {
 
 .drawing-board__button {
   padding: 10px 20px;
-  width: 150px;
+  width: 200px;
   text-align: center;
-  height: 40px;
-  background-color: rgb(161, 251, 248);
+  height: 65px;
+  font-family: Protest Riot;
   border: none;
   border-radius: 12px;
   font-weight: bold;
   color: rgb(179, 0, 39);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 25px;
+}
+
+/* file: assets/public/css/player.css */
+.drawing-board__options .drawing-board__button:first-child {
+  background: #246C84;   /* nút trái */
+  color: #6BD1E1;
+  border: 2px solid #2f74c0;
+}
+
+.drawing-board__options .drawing-board__button:last-child {
+  background: #79BBB3;   /* nút phải */
+  color: #244E84;
+  border: 2px solid #079e78;
+}
+
+/* Thanh thời gian cho bảng chọn */
+.choice-timer {
+  width: 80%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  margin: 20px auto 0;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.choice-timer__fill {
+  height: 100%;
+  width: 100%;
+  border-radius: 10px;
 }
 
 .drawing-board__progress {
@@ -488,11 +533,16 @@ section {
 
 /* ranking-board */
 .ranking-board {
-  flex: 1;
-  display: flex;
-  background: white;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: none; /* mặc định ẩn, hiển khi showRankings */
+  justify-content: center;
+  align-items: center;
+  background: rgba(255,255,255,0.95);
   padding: 20px;
-  flex-direction: column;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
 .ranking-board__title {
@@ -528,8 +578,9 @@ section {
 .ranking-board__avatar img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
+  border-radius: 50%;
 }
 
 .ranking-board__name {
@@ -576,6 +627,146 @@ h6 {
   height: 90px;
 }
 
-/* QR code */
+/* Add progress bar styling */
+.ranking-board__progress {
+  height: 10px;
+  background-color: #ccc;
+  width: 95%;
+  margin: 20px auto;
+  border-radius: 20px;
+  overflow: hidden;
+}
 
-/*# sourceMappingURL=player.css.map */
+.ranking-board__progress-fill {
+  height: 100%;
+  background-color: #003399;
+  width: 100%;
+  transition: width linear;
+}
+
+.ranking-board__reset-text {
+    color: #666;
+    font-size: 14px;
+    margin-top: 15px;
+    font-style: italic;
+}
+
+/* Hover effect cho ranking items */
+.ranking-board__item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Styling cho word display và hint */
+.word-display {
+  position: absolute;
+  top: -40px;
+  left: 48%;
+  transform: translateX(-50%);
+  background: #b5b5b5;
+  width: 200x;
+  border: 2px solid #979696;
+  border-radius: 10px;
+  padding: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+  z-index: 100;
+}
+
+.word-display h3 {
+  color: #000000;
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-family: Open Sans;
+  font-weight: bold 800;
+}
+
+.word-display #current-word {
+  color: #c73c00;
+  font-weight: bold;
+  font-size: 20px;
+  font-family: Open Sans;
+  font-weight: bold 800;
+  text-shadow: 1.5px 1.5px 3px rgb(255, 255, 255);
+}
+
+.hint-button {
+  background: #f25900;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  font-family: Open Sans;
+  font-weight: bold 700;
+}
+
+.hint-button:hover {
+  background: #d44b01;
+  transform: translateY(-2px);
+}
+
+.hint-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Styling cho hint display */
+.hint-display {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border: 3px solid #4a98f7;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  z-index: 1000;
+  max-width: 300px;
+  text-align: center;
+  animation: hintSlideIn 0.3s ease-out;
+}
+
+@keyframes hintSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.hint-content h3 {
+  color: #4a98f7;
+  margin-bottom: 15px;
+  font-size: 20px;
+  font-family: Open Sans;
+  font-weight: bold 700;
+}
+
+.hint-content #hint-text {
+  color: #333;
+  font-size: 18px;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  font-family: Open Sans;
+  font-weight: bold 700;
+}
+
+.hint-info {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.hint-info span {
+  color: #4a98f7;
+  font-family: Open Sans;
+  font-weight: bold 700;
+}

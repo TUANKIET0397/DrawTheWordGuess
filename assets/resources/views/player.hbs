@@ -24,10 +24,8 @@
     <section class="drawing-board" style="background: none !important;">
         <!-- khung chứa canvas vẽ -->
         <div class="word-display" id="word-display" style="display: none;">
-            <h3>Keyword: <span id="current-word"></span></h3>
-            <button class="hint-button" id="hint-button">Suggest (<span
-                    id="hint-count"
-                >3</span>)</button>
+                <h3>Keyword: <span id="current-word"></span></h3>
+                <button class="hint-button" id="hint-button">Suggest (<span id="hint-count">3</span>)</button>
         </div>
 
         <div
@@ -43,20 +41,20 @@
                 />
                 <h2 class="drawing-board__title">Draw Or Guess</h2>
                 <h3 class="drawing-board__username" id="drawer-name-first"></h3>
-
+                
                 <div class="drawing-board__options">
                     <button
-                        style="font-size: 40px;"
+                    style="font-size: 40px;"
                         class="drawing-board__button"
                         onclick="handleChoice('draw')"
                     >Draw</button>
                     <button
-                        style="font-size: 40px;"
+                    style="font-size: 40px;"
                         class="drawing-board__button"
                         onclick="handleChoice('no-draw')"
                     >Guess</button>
                 </div>
-
+                
                 <!-- Thanh thời gian cho bảng chọn đầu tiên -->
                 <div class="choice-timer">
                     <div class="choice-timer__fill" id="choice-timer-1"></div>
@@ -77,11 +75,11 @@
                     class="drawing-board__username"
                     id="drawer-name-second"
                 ></h3>
-
+                
                 <div class="drawing-board__options">
                     <!-- Các button chọn từ sẽ được thêm động bằng JavaScript -->
                 </div>
-
+                
                 <!-- Thanh thời gian cho bảng chọn từ -->
                 <div class="choice-timer">
                     <div class="choice-timer__fill" id="choice-timer-2"></div>
@@ -94,16 +92,14 @@
             class="drawing-board__canvas"
             style="display: none;"
         >
+            
 
             <!-- Gợi ý hiển thị cho TẤT CẢ người chơi (kể cả người đoán) -->
             <div id="hint-display" class="hint-display" style="display:none;">
                 <span id="hint-text"></span>
-                <span class="hint-remaining">(<span
-                        id="remaining-hints"
-                    >3</span>
-                    suggestions left)</span>
+                <span class="hint-remaining">(<span id="remaining-hints">3</span> suggestions left)</span>
             </div>
-
+            
             <canvas id="drawing-canvas"></canvas>
             <div class="drawing-board__progress">
                 <div
@@ -149,8 +145,7 @@
             <div class="ranking-board__progress">
                 <div class="ranking-board__progress-fill"></div>
             </div>
-            <p class="ranking-board__reset-text">Game mới sẽ bắt đầu sau 11
-                giây...</p>
+            <p class="ranking-board__reset-text">Game mới sẽ bắt đầu sau 11 giây...</p>
         </div>
         <!-- ranking-board -->
     </section>
