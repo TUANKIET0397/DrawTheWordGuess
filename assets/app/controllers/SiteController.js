@@ -5,6 +5,7 @@ class SiteController {
         res.render("player", {
             playerName,
             ngrokUrl: global.ngrokUrl || `http://localhost:1607`,
+            title: "On Game",
         })
     }
 }

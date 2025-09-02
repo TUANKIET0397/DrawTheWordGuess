@@ -20,17 +20,9 @@ app.use(express.static(path.join(__dirname, "public")))
 
 app.use("/js", express.static(path.join(__dirname, "js")))
 app.use("/img", express.static(path.join(__dirname, "img")))
+app.use("/favicon", express.static(path.join(__dirname, "favicon")))
 // HTTP logger
 app.use(morgan("combined"))
-
-// template engine
-// app.engine(
-//     ".hbs",
-//     engine({
-//         extname: ".hbs",
-//         allowProtoPropertiesByDefault: true,
-//     })
-// )
 
 // template engine
 app.engine(
@@ -69,6 +61,7 @@ initializeSocket(io)
 app.get("/", (req, res) => {
     res.render("home", {
         ngrokUrl: global.ngrokUrl || `http://localhost:${port}`,
+        title: "Home",
     })
 })
 
