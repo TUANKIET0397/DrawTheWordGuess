@@ -889,3 +889,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Khởi tạo biến global
 let currentDrawerName = "Đang chờ..."
+
+// Touch events for drawing on mobile/tablet
+canvas.addEventListener("touchstart", function (e) {
+    if (!isDrawer) return
+    const touch = e.touches[0]
+    const rect = canvas.getBoundingClientRect()
+    const offsetX = touch.clientX - rect.left
+    const offsetY = touch.clientY - rect.top
+    // Tạo một event giả để dùng lại hàm startDraw
+    startDraw({ offsetX, offsetY })
+    e.preventDefault()
+})
+
+canvas.addEventListener("touchmove", function (e) {
+    if (!isDrawer || !isDrawing) return
+    const touch = e.touches[0]
+    const rect = canvas.getBoundingClientRect()
+    const offsetX = touch.clientX - rect.left
+    const offsetY = touch.clientY - rect.top
+    // Tạo một event giả để dùng lại hàm drawing
+    drawing({ offsetX, offsetY })
+    e.preventDefault()
+})
+
+canvas.addEventListener("touchend", function (e) {
+    isDrawing = false
+    e.preventDefault()
+})
