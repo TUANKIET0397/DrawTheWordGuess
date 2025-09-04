@@ -38,6 +38,8 @@ Dự án này chạy bằng **Node.js**, file khởi động chính là **index.
 
 -   [Node.js](https://nodejs.org/) (phiên bản >= 16.x khuyến nghị)
 -   [npm](https://www.npmjs.com/) (có sẵn khi cài Node.js)
+-   [MySQL Server](dev.mysql.com/mysql) (phiên bản >= 8.0 khuyến nghị)
+-   [MySQL Workbench](dev.mysql.com/workbench) (dùng để quản lý và trực quan hóa cơ sở dữ liệu)
 
 ---
 
@@ -53,6 +55,15 @@ Dự án này chạy bằng **Node.js**, file khởi động chính là **index.
 2. Cài dependencies:
     ```bash
     npm install
+    ```
+
+---
+
+3. Lưu ý
+    ```bash
+    💡 Do trong quá trình phát triển và kiểm thử, đồng thời chưa có domain hoặc server, nên cần chạy MySQL cục bộ để xem được demo.
+    - Xây dựng database dựa vào thư mục database
+    - Đổi password theo root database của bạn
     ```
 
 ---
